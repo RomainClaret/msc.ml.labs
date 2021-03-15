@@ -1,0 +1,6 @@
+.vscode/
+.DS_Store
+drafts/.ipynb_checkpoints/
+lab1/.ipynb_checkpoints/
+lab1/__pycache__/
+.ipynb_checkpoints/
