@@ -89,7 +89,7 @@ df_evaluate.replace(dict_replace, inplace=True)
 
 # uniformizing the categories between the training and evaluation datasets
 # indeed, there is a . at the end of the value in the evaluation dataset for the income category and not in the training dataset
-df_evaluate["income"].replace({"<=50K.": "<=50K", ">50K.": ">50K"}, inplace=True)
+df_evaluate["income"].replace({"<=50K.":"<=50K", ">50K.":">50K"}, inplace=True)
 
 
 # for binary categories we will be using a label encoder
@@ -131,8 +131,8 @@ df_evaluate = df_evaluate.append(df_fake).reset_index(drop=True)
 # note that get_dummies from pandas is exactly doing this without the complexity of using OneHotEncoder manually from sklearn
 # - workclass, race, native-country
 for l in ["workclass", "race", "native-country"]:
-    df_train=pd.concat([df_train,pd.get_dummies(df_train[l], prefix="encoded_"+l)],axis=1)
-    df_evaluate=pd.concat([df_evaluate,pd.get_dummies(df_evaluate[l], prefix="encoded_"+l)],axis=1)
+    df_train=pd.concat([df_train, pd.get_dummies(df_train[l], prefix="encoded_"+l)], axis=1)
+    df_evaluate=pd.concat([df_evaluate, pd.get_dummies(df_evaluate[l], prefix="encoded_"+l)], axis=1)
 
     
 #remove the fake rows
@@ -146,7 +146,10 @@ columns = continuous_features+encoded_features
 columns.remove("encoded_income")    
 
 # make training and testings sets
-X_train, X_test, y_train, y_test = train_test_split(df_train[columns],df_train["encoded_income"],test_size=0.2,random_state=1)
+X_train, X_test, y_train, y_test = train_test_split(df_train[columns],
+                                                    df_train["encoded_income"],
+                                                    test_size=0.2,
+                                                    random_state=1)
 
 # make evaluation sets
 X_evaluate = df_evaluate[columns]
@@ -168,17 +171,17 @@ parameter_dtree_max = 15
 preds_dtree_train=[]
 preds_dtree_test=[]
 for depth in range(parameter_dtree_min,parameter_dtree_max):
-    cl_dtree = DecisionTreeClassifier(criterion='gini', random_state=1,max_depth=depth)
-    dtree_model = cl_dtree.fit(X_train,y_train)
+    cl_dtree = DecisionTreeClassifier(criterion='gini', random_state=1, max_depth=depth)
+    dtree_model = cl_dtree.fit(X_train, y_train)
     y_hat_dtree_train = dtree_model.predict(X_train)
     y_hat_dtree_test = dtree_model.predict(X_test)
-    preds_dtree_train.append(accuracy_score(y_train,y_hat_dtree_train))
-    preds_dtree_test.append(accuracy_score(y_test,y_hat_dtree_test))
+    preds_dtree_train.append(accuracy_score(y_train, y_hat_dtree_train))
+    preds_dtree_test.append(accuracy_score(y_test, y_hat_dtree_test))
     #print(depth,"Train accuracy_score",preds_train[-1])
     #print(depth,"Test accuracy_score",preds_test[-1],"\n")
     
-plt.scatter(range(parameter_dtree_min,parameter_dtree_max),preds_dtree_train,c="b",label="train score")
-plt.scatter(range(parameter_dtree_min,parameter_dtree_max),preds_dtree_test,c="r",label="test score")
+plt.scatter(range(parameter_dtree_min, parameter_dtree_max), preds_dtree_train, c="b", label="train score")
+plt.scatter(range(parameter_dtree_min, parameter_dtree_max), preds_dtree_test, c="r", label="test score")
 plt.legend(loc="upper left")
 plt.title('DecisionTreeClassifier: accuracy_score vs depth')
 plt.xlabel('depth')
@@ -198,15 +201,15 @@ print("*"*len(cl_name))
 print(cl_name)
 print("*"*len(cl_name),'\n')
 max_dtree_index = preds_dtree_test.index(max(preds_dtree_test))
-best_depth = list(range(parameter_dtree_min,parameter_dtree_max))[max_dtree_index]
-cl_dtree = DecisionTreeClassifier(criterion='gini', random_state=1,max_depth=best_depth)
-dtree_model = cl_dtree.fit(X_train,y_train)
+best_depth = list(range(parameter_dtree_min, parameter_dtree_max))[max_dtree_index]
+cl_dtree = DecisionTreeClassifier(criterion='gini', random_state=1, max_depth=best_depth)
+dtree_model = cl_dtree.fit(X_train, y_train)
 y_hat_dtree_train = dtree_model.predict(X_train)
 y_hat_dtree_test = dtree_model.predict(X_test)
 y_hat_dtree_evaluate = dtree_model.predict(X_evaluate)
-print("depth="+str(best_depth),"Train accuracy_score",accuracy_score(y_train,y_hat_dtree_train))
-print("depth="+str(best_depth),"Test accuracy_score",accuracy_score(y_test,y_hat_dtree_test))
-print("depth="+str(best_depth),"Evaluation accuracy_score",accuracy_score(y_evaluate,y_hat_dtree_evaluate),"\n")
+print("depth="+str(best_depth),"Train accuracy_score",accuracy_score(y_train, y_hat_dtree_train))
+print("depth="+str(best_depth),"Test accuracy_score",accuracy_score(y_test, y_hat_dtree_test))
+print("depth="+str(best_depth),"Evaluation accuracy_score",accuracy_score(y_evaluate, y_hat_dtree_evaluate),"\n")
 
 
 plt.close()
