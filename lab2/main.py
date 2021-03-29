@@ -24,7 +24,7 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
 
-# get the features names and the values of the categories from adult.names (features and values linked by the index)
+# get the features names and the values of the categories from adult.names (build a dictionary)
 data_dict = {}
 with open('adult.names') as f:
     for l in f:
