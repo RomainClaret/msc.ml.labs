@@ -25,29 +25,28 @@ warnings.filterwarnings("ignore")
 # SPLITING ADULT.TEST FILE IN SUBFILES
 #spliting the adult.test file into several files to simulate weeks
 
-#filename = 'adult.test'
-#file_handler = open(filename, 'r').readlines()
-#prefix_file = "adult_2021_cw_"
-#week_number = 1
-#split_into = 10
-#line_count = 0
-#with open(filename) as f: line_count = sum(1 for _ in f)
-#
-#for i in range(len(file_handler)):
-#    if i % (line_count//split_into) == 0:
-#        open(str(prefix_file)+str(week_number) + ".csv", "w+").writelines(file_handler[i:i+1000])
-#        week_number += 1
+filename = 'adult.test'
+file_handler = open(filename, 'r').readlines()[1:]
+prefix_file = "adult_2021_cw_"
+week_number = 1
+split_into = 10
+line_count = 0
+file_length = len(file_handler)
+
+for i in range(0,file_length):
+    if i % ((file_length)//split_into) == 0 and i+((file_length//split_into)//2) < file_length:
+        open(str(prefix_file)+str(week_number) + ".csv", "w+").writelines(file_handler[i:i+(file_length//split_into)])
+        week_number += 1
 
 
 # RUN PIPELINE MODEL FROM OTHER FILE
-# 3. Create a second script that will load the Pipeline and use it to predict values from an
 #input file, and save the predictions into a different file.
 #Example:
 #Let's say you have the input data weekly in the file adult_2021_cw_12.csv.
 #This second script should read the input from this file and use the classifier to make predictions and write those predictions in the file adult_2021_cw_12_pred.csv .
 
 # load pipeline model
-pipeline_model = pickle.load( open("pipeline_model.pickle", "rb" ))
+pipeline_model = pickle.load( open("grid_search_model.pickle", "rb" ))
 
 weeks_count = 10
 filename = 'adult.test'
@@ -107,3 +106,15 @@ for i in range (weeks_count):
     
     # save the prediction into file
     pd.DataFrame(y_hat_dtree_weekly).to_csv(str(pref_filename),header=["pred_income"], index=None)
+    
+    # lab 03 results:
+    # adult_2021_cw_1.csv accuracy_score: 0.8293736501079914 
+    # adult_2021_cw_2.csv accuracy_score: 0.8503253796095445 
+    # adult_2021_cw_3.csv accuracy_score: 0.8427807486631016 
+    # adult_2021_cw_4.csv accuracy_score: 0.8307860262008734 
+    # adult_2021_cw_5.csv accuracy_score: 0.8507462686567164 
+    # adult_2021_cw_6.csv accuracy_score: 0.854978354978355 
+    # adult_2021_cw_7.csv accuracy_score: 0.8545454545454545 
+    # adult_2021_cw_8.csv accuracy_score: 0.8514531754574811 
+    # adult_2021_cw_9.csv accuracy_score: 0.8296943231441049 
+    # adult_2021_cw_10.csv accuracy_score: 0.8574537540805223 

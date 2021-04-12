@@ -17,12 +17,14 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import GridSearchCV
+#from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score
 import pickle
-
+import time
 
 # get the features names and the values of the categories from adult.names (build a dictionary)
 data_dict = {}
@@ -124,7 +126,6 @@ columns = continuous_features+unencoded_features+encoded_features
     
 
 # PART PIPELINE
-# 1. Use a Pipeline for the transformation and model training.
 # Here we build out pipeline
 # First we create a ColumnTransformer for the Categorical (ignoring unknown values) and Numeric features
 # Second we pipe the features and the classifier with the parameters from lab2
@@ -134,6 +135,8 @@ columns = continuous_features+unencoded_features+encoded_features
 # But it's just a pedagological flavor and to use the ColumnTranformer for whatever reason 
 # https://stats.stackexchange.com/questions/10289/whats-the-difference-between-normalization-and-standardization
 
+# for non-binary categories we will be using a onehot encoder as decision trees are sensitive to leaves values
+
 # We choose a the best parameters from lab2 for the decision tree
 # depth=8 Train accuracy_score 0.8550292179535
 # depth=8 Test accuracy_score 0.8465108569534229
@@ -141,7 +144,7 @@ columns = continuous_features+unencoded_features+encoded_features
 
 feature_transformation = ColumnTransformer(transformers=[
     ('categorical', OneHotEncoder(handle_unknown='ignore'), unencoded_features+encoded_features[:-1]),
-    ('numeric', StandardScaler(), continuous_features)
+    ('numerical', StandardScaler(), continuous_features)
 ])
 
 adult_pipeline = Pipeline(steps=[
@@ -149,8 +152,40 @@ adult_pipeline = Pipeline(steps=[
   ('classifier', DecisionTreeClassifier(criterion='gini', random_state=1, max_depth=8))
 ])
 
-# building our pipeline-driven model
-pipeline_model = adult_pipeline.fit(df_train, df_train["encoded_income"])
+
+# 1. Choose at least 2 parameters to tune, each having at least 2 different possible values.
+
+#https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html
+#https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+#https://towardsdatascience.com/how-to-tune-a-decision-tree-f03721801680
+grids_params = [
+    {
+        'classifier': (DecisionTreeClassifier(random_state=1),),
+        #'classifier__criterion':['gini', 'entropy'], #best_solo='entropy'
+        #'classifier__max_depth': range(6, 11), #best_solo=8
+        #'classifier__ccp_alpha': [x * 0.1 for x in range(0, 3)], #default: 0.0 #best_solo=0.0
+        'classifier__min_samples_split': range(10,30), #default: 2 #best_solo=11
+        #'classifier__min_samples_leaf': range(32, 37), #default: 1 #best_solo=34
+        #'classifier__min_weight_fraction_leaf': [x * 0.1 for x in range(1, 4)], #default: 0.0 #best_solo=0.1
+        #'classifier__min_impurity_decrease': range(0, 8), #default: 0 #best_solo=0
+        #'classifier__max_features': range(1,12) #default: n_features = 11 #best_solo=4
+    }#,
+    #{
+    #    'classifier': (KNeighborsClassifier(),),
+    #    'classifier__n_neighbors': range(25, 26),
+    #}
+]
+
+# 2. Train and evaluate a decision tree for each possible combination of the chosen parameters.
+# 3. Choose the best parameters and train the model using the full training dataset.
+# Optional goal 1. Instead of (or additionally to) splitting the dataset into training and validation data, use cross-validation to tune the parameters.
+start = time.time()
+grid_search_model = GridSearchCV(estimator=adult_pipeline, param_grid=grids_params, n_jobs=10, cv=5, verbose=10)
+grid_search_model.fit(df_train, df_train["encoded_income"])
+end = time.time()
+print("Time elapsed",str(end - start))
+
+print(pd.DataFrame(grid_search_model.cv_results_))
     
 #remove the fake rows
 df_train = df_train[:-len(df_fake)]
@@ -172,22 +207,28 @@ y_evaluate = df_evaluate["encoded_income"]
 # evaluate Decision Tree with our pipeline
 
 cl_name = "Evaluate Decision Tree Classifier Pipeline on new data"
-print("*"*len(cl_name))
+print("\n*"*len(cl_name))
 print(cl_name)
 print("*"*len(cl_name),'\n')
 
-y_hat_dtree_train = pipeline_model.predict(X_train)
-y_hat_dtree_test = pipeline_model.predict(X_test)
-y_hat_dtree_evaluate = pipeline_model.predict(X_evaluate)
+y_hat_dtree_train = grid_search_model.predict(X_train)
+y_hat_dtree_test = grid_search_model.predict(X_test)
+y_hat_dtree_evaluate = grid_search_model.predict(X_evaluate)
 
+print("Best hyperparameters", grid_search_model.best_params_)
 print("Train accuracy_score",accuracy_score(y_train,y_hat_dtree_train))
 print("Test accuracy_score",accuracy_score(y_test,y_hat_dtree_test))
 print("Evaluation accuracy_score",accuracy_score(y_evaluate,y_hat_dtree_evaluate),"\n")
 
+# lab 03 results:
+# depth=8 Train accuracy_score 0.8539931203116582
+# depth=8 Test accuracy_score 0.8518150174042765
+# depth=8 Evaluation accuracy_score 0.8470783532536521 
+
 
 # SERALIZE PIPELINE
-# 2. Save the Pipeline (using pickle) into a file
-pickle.dump(pipeline_model, open("pipeline_model.pickle", "wb" ))
+# 4. Save the model (as in the exercise 3).
+pickle.dump(grid_search_model, open("grid_search_model.pickle", "wb" ))
 
 
 #def main():
