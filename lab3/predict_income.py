@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# 29.03.19
+# 29.03.21
 # Assignment lab 03
 
 # Master Class: Machine Learning (5MI2018)
@@ -22,15 +22,9 @@ from sklearn.metrics import accuracy_score
 warnings.filterwarnings("ignore")
 
 
-# RUN PIPELINE MODEL FROM OTHER FILE
-# 3. Create a second script that will load the Pipeline and use it to predict values from an
-#input file, and save the predictions into a different file.
-#Example:
-#Let's say you have the input data weekly in the file adult_2021_cw_12.csv.
-#This second script should read the input from this file and use the classifier to make predictions and write those predictions in the file adult_2021_cw_12_pred.csv .
-
-
+# SPLITING ADULT.TEST FILE IN SUBFILES
 #spliting the adult.test file into several files to simulate weeks
+
 #filename = 'adult.test'
 #file_handler = open(filename, 'r').readlines()
 #prefix_file = "adult_2021_cw_"
@@ -44,6 +38,13 @@ warnings.filterwarnings("ignore")
 #        open(str(prefix_file)+str(week_number) + ".csv", "w+").writelines(file_handler[i:i+1000])
 #        week_number += 1
 
+
+# RUN PIPELINE MODEL FROM OTHER FILE
+# 3. Create a second script that will load the Pipeline and use it to predict values from an
+#input file, and save the predictions into a different file.
+#Example:
+#Let's say you have the input data weekly in the file adult_2021_cw_12.csv.
+#This second script should read the input from this file and use the classifier to make predictions and write those predictions in the file adult_2021_cw_12_pred.csv .
 
 # load pipeline model
 pipeline_model = pickle.load( open("pipeline_model.pickle", "rb" ))
@@ -105,4 +106,4 @@ for i in range (weeks_count):
     print(pref_filename, "accuracy_score:",accuracy_score(df_weekly["encoded_income"],y_hat_dtree_weekly),"\n")
     
     # save the prediction into file
-    pd.DataFrame(y_hat_dtree_weekly).to_csv(str(pref_filename)+str(i+1)+"_pred.csv",header=["pred_income"], index=None)
+    pd.DataFrame(y_hat_dtree_weekly).to_csv(str(pref_filename),header=["pred_income"], index=None)
