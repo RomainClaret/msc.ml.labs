@@ -25,6 +25,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score
 import pickle
 import time
+import multiprocessing as mp
 
 # get the features names and the values of the categories from adult.names (build a dictionary)
 data_dict = {}
@@ -153,6 +154,10 @@ adult_pipeline = Pipeline(steps=[
 ])
 
 
+#set workers
+nb_workers = mp.cpu_count()-1
+print("nb_workers",nb_workers)
+
 # 1. Choose at least 2 parameters to tune, each having at least 2 different possible values.
 
 #https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html
@@ -161,14 +166,14 @@ adult_pipeline = Pipeline(steps=[
 grids_params = [
     {
         'classifier': (DecisionTreeClassifier(random_state=1),),
-        #'classifier__criterion':['gini', 'entropy'], #best_solo='entropy'
-        #'classifier__max_depth': range(6, 11), #best_solo=8
-        #'classifier__ccp_alpha': [x * 0.1 for x in range(0, 3)], #default: 0.0 #best_solo=0.0
-        'classifier__min_samples_split': range(10,30), #default: 2 #best_solo=11
-        #'classifier__min_samples_leaf': range(32, 37), #default: 1 #best_solo=34
-        #'classifier__min_weight_fraction_leaf': [x * 0.1 for x in range(1, 4)], #default: 0.0 #best_solo=0.1
-        #'classifier__min_impurity_decrease': range(0, 8), #default: 0 #best_solo=0
-        #'classifier__max_features': range(1,12) #default: n_features = 11 #best_solo=4
+        'classifier__criterion':['gini', 'entropy'], #best_solo='entropy'
+        'classifier__max_depth': range(8, 11), #best_solo=8
+        #'classifier__ccp_alpha': [x * 0.1 for x in range(0, 1)], #default: 0.0 #best_solo=0.0
+        'classifier__min_samples_split': range(3,6), #default: 2 #best_solo=11
+        #'classifier__min_samples_leaf': range(1, 3), #default: 1 #best_solo=34
+        #'classifier__min_weight_fraction_leaf': [x * 0.1 for x in range(0, 2)], #default: 0.0 #best_solo=0.1
+        #'classifier__min_impurity_decrease': range(0, 1), #default: 0 #best_solo=0
+        'classifier__max_features': range(25,28) #default: n_features = 11 #best_solo=4
     }#,
     #{
     #    'classifier': (KNeighborsClassifier(),),
@@ -179,13 +184,15 @@ grids_params = [
 # 2. Train and evaluate a decision tree for each possible combination of the chosen parameters.
 # 3. Choose the best parameters and train the model using the full training dataset.
 # Optional goal 1. Instead of (or additionally to) splitting the dataset into training and validation data, use cross-validation to tune the parameters.
+#for cv in range(5,11):
+#print("\n\n CURRENT CV",cv)
 start = time.time()
-grid_search_model = GridSearchCV(estimator=adult_pipeline, param_grid=grids_params, n_jobs=10, cv=5, verbose=10)
+grid_search_model = GridSearchCV(estimator=adult_pipeline, param_grid=grids_params, n_jobs=25, cv=10, verbose=10)
 grid_search_model.fit(df_train, df_train["encoded_income"])
 end = time.time()
-print("Time elapsed",str(end - start))
+print("\nTime elapsed",str(end - start),"\n")
 
-print(pd.DataFrame(grid_search_model.cv_results_))
+#print(pd.DataFrame(grid_search_model.cv_results_))
     
 #remove the fake rows
 df_train = df_train[:-len(df_fake)]
@@ -206,8 +213,8 @@ y_evaluate = df_evaluate["encoded_income"]
 # PART EVALUTATION
 # evaluate Decision Tree with our pipeline
 
-cl_name = "Evaluate Decision Tree Classifier Pipeline on new data"
-print("\n*"*len(cl_name))
+cl_name = "\nEvaluate Decision Tree Classifier Pipeline on new data"
+print("*"*len(cl_name))
 print(cl_name)
 print("*"*len(cl_name),'\n')
 
@@ -225,15 +232,7 @@ print("Evaluation accuracy_score",accuracy_score(y_evaluate,y_hat_dtree_evaluate
 # depth=8 Test accuracy_score 0.8518150174042765
 # depth=8 Evaluation accuracy_score 0.8470783532536521 
 
-
 # SERALIZE PIPELINE
 # 4. Save the model (as in the exercise 3).
 pickle.dump(grid_search_model, open("grid_search_model.pickle", "wb" ))
 
-
-#def main():
-#    model_knn.demo()
-#    model_decision_tree.demo()
-#
-#if __name__ == "__main__":
-#    main()
