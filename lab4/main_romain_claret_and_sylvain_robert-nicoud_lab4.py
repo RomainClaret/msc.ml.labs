@@ -155,8 +155,8 @@ adult_pipeline = Pipeline(steps=[
 
 
 #set workers
-nb_workers = mp.cpu_count()-1
-print("nb_workers",nb_workers)
+#nb_workers = mp.cpu_count()-1
+#print("nb_workers",nb_workers)
 
 # 1. Choose at least 2 parameters to tune, each having at least 2 different possible values.
 
@@ -187,7 +187,7 @@ grids_params = [
 #for cv in range(5,11):
 #print("\n\n CURRENT CV",cv)
 start = time.time()
-grid_search_model = GridSearchCV(estimator=adult_pipeline, param_grid=grids_params, n_jobs=25, cv=10, verbose=10)
+grid_search_model = GridSearchCV(estimator=adult_pipeline, param_grid=grids_params, n_jobs=10, cv=10, verbose=10)
 grid_search_model.fit(df_train, df_train["encoded_income"])
 end = time.time()
 print("\nTime elapsed",str(end - start),"\n")
