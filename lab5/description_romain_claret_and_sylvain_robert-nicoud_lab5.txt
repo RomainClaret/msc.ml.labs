@@ -1,6 +1,17 @@
-Firstly using pandas profiling, we went trhought the dataset in order to see which attributes could be the most interesting to us.
-This is quite subject to interpretation to use in a cluster analysis (we did this ).
+1. we chose arbitrarly 1970 and 1990 as year to do the exercice. So we created two dataframes df_1990 and df_1970.
+using pandas profiling, we went though the datasets in order to understand more what is in it and to see if we could 
+determine visually which attributes are the most interesting to us when using a clustering technique on these dataframes.
+This way of doing is subject to interpretation, but it helped having a cluster that can be quite well defined.
+finally we simply dropped "NA" values.
 
+2. regarding our two dataframes, we decided to use kmeans as first clustering technique. 
 
-We see a little difference between gaussiane mixture and kmeans algorythme clusturing techniques
-because we read the gaussiane mixture was descibed as a better algorythme to use with the distribution we have with our 2 years
+3. to determine the number of cluster we tried with 2, 3, 4 and 5. 
+Our decision, to finally use 4 clusters has been based on our interpretation and sensitivity. with 2 respectively 3 clusters, 
+observations were very dispeared, with 5 clusters it made 2 clusters with very few observations so we decided to go with 4. 
+Comparing df_1970 and df_1990 we can see that 2 clusters are similar in their location on the plot (green and grey) with 2
+and 1 outlier belonging to it. Violet and Yellow cluster are less similar moved a bit more.
+
+4. Finally we tried the gausiane mixture as a second technique because value's distribution of our dataframes seemed to be 
+a good candidate for the gausiane mixture. we see a little difference between gausiane mixture and kmeans algorythme clusturing 
+techniques not significant to be interpreted visually.
