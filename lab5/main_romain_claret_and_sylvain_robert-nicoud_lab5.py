@@ -43,13 +43,24 @@ df_1990_cleaned = df_1990[features].dropna()
 df_1970_cleaned = df_1970[features].dropna()
 
 # 2. Choose the clustering technique and obtain the clusters for the two datasets.
+# we choose kmeans and the gausianne mixture
+# https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
+# https://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture.html
 df_1970_pca = PCA(2).fit_transform(df_1970_cleaned)
 df_1990_pca = PCA(2).fit_transform(df_1990_cleaned)
 kmeans_1970 = KMeans(n_clusters=4, random_state=42).fit(df_1970_pca)
 kmeans_1990 = KMeans(n_clusters=4, random_state=42).fit(df_1990_pca)
+gnn_1970 = GaussianMixture(n_components=4, covariance_type='full').fit(df_1970_pca)
 
 # 3. Choose one of the years and visualize the results of the clustering. Give as much detail as possible.
+# use of kmeans
 y_kmeans_1970 = kmeans_1970.predict(df_1970_pca)
 plt.scatter(df_1970_pca[:,0], df_1970_pca[:,1], c=y_kmeans_1970, s=50, cmap='viridis')
 plt.scatter(kmeans_1970.cluster_centers_[:,0], kmeans_1970.cluster_centers_[:,1], c='blue', s=200, alpha=0.9)
+plt.show()
+
+# gausianne mixture for the comparaison
+y_gnn_1970 = gnn_1970.predict(df_1970_pca)
+plt.scatter(df_1970_pca[:,0], df_1970_pca[:,1], c=y_gnn_1970, s=50, cmap='viridis')
+plt.scatter(gnn_1970.means_[:,0], gnn_1970.means_[:,1], c='blue', s=200, alpha=0.9)
 plt.show()
