@@ -1,0 +1,6 @@
+Firstly using pandas profiling, we went trhought the dataset in order to see which attributes could the most interessting 
+to use in a cluster analysis (we did this ).
+
+
+We see a little difference between gaussiane mixture and kmeans algorythme clusturing techniques
+because we read the gaussiane mixture was descibed as a better algorythme to use with the distribution we have with our 2 years
