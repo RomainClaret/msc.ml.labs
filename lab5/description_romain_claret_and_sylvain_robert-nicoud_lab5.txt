@@ -1,14 +1,14 @@
-1. we chose arbitrarly 1970 and 1990 as year to do the exercice. So we created two dataframes df_1990 and df_1970.
-using pandas profiling, we went though the datasets in order to understand more what is in it and to see if we could 
+1. we chose arbitrarly 1970 and 1990 as year to do the exercice. So we created two dataframes df_1990 and df_1970 from the original
+dataset. Using pandas profiling, we went though the datasets in order to understand more what is in it and to see if we could 
 determine visually which attributes are the most interesting to us when using a clustering technique on these dataframes.
 This way of doing is subject to interpretation, but it helped having a cluster that can be quite well defined.
-finally we simply dropped "NA" values.
+finally we decided to simply drop "NA" values.
 
-2. regarding our two dataframes, we decided to use kmeans as first clustering technique. 
+2. regarding our two dataframes, we used kmeans as first clustering technique. 
 
 3. to determine the number of cluster we tried with 2, 3, 4 and 5. 
 Our decision, to finally use 4 clusters has been based on our interpretation and sensitivity. with 2 respectively 3 clusters, 
-observations were very dispeared, with 5 clusters it made 2 clusters with very few observations so we decided to go with 4. 
+observations were very dispeared, with 5 clusters it made 2 clusters with too few observations so we decided to go with 4. 
 Comparing df_1970 and df_1990 we can see that 2 clusters are similar in their location on the plot (green and grey) with 2
 and 1 outlier belonging to it. Violet and Yellow cluster are less similar moved a bit more.
 
