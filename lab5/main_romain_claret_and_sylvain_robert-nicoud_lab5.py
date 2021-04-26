@@ -27,6 +27,7 @@ df_1990 = df[(df["year"]==1990)]
 df_1970 = df[(df["year"]==1970)]
 
 features = [
+    "country",
     "hc",
     "ctfp",
     "cwtfp",
@@ -47,8 +48,8 @@ df_1970_cleaned = df_1970[features].dropna()
 # we choose kmeans and the gausianne mixture
 # https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
 # https://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture.html
-df_1970_pca = PCA(2).fit_transform(df_1970_cleaned)
-df_1990_pca = PCA(2).fit_transform(df_1990_cleaned)
+df_1970_pca = PCA(2).fit_transform(df_1970_cleaned[features[1:]])
+df_1990_pca = PCA(2).fit_transform(df_1990_cleaned[features[1:]])
 kmeans_1970 = KMeans(n_clusters=4, random_state=42).fit(df_1970_pca)
 kmeans_1990 = KMeans(n_clusters=4, random_state=42).fit(df_1990_pca)
 gnn_1970 = GaussianMixture(n_components=4, covariance_type='full').fit(df_1970_pca)
@@ -65,3 +66,17 @@ y_gnn_1970 = gnn_1970.predict(df_1970_pca)
 plt.scatter(df_1970_pca[:,0], df_1970_pca[:,1], c=y_gnn_1970, s=50, cmap='viridis')
 plt.scatter(gnn_1970.means_[:,0], gnn_1970.means_[:,1], c='blue', s=200, alpha=0.9)
 plt.show()
+
+# We list the countries in the clusters
+def country_listing(df, clusters):
+    tmp = []
+    for i_k in range(0, max(clusters)+1):
+        tmp_k = []
+        for i_c, c in enumerate(clusters):
+            if c == i_k: tmp_k.append(df.iloc[i_c]["country"])
+        tmp.append(tmp_k)
+    return tmp
+
+print(country_listing(df_1970_cleaned, y_kmeans_1970))
+print(country_listing(df_1970_cleaned, y_gnn_1970))
+
