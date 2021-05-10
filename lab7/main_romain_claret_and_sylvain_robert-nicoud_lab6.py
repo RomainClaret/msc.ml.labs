@@ -21,18 +21,16 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import FunctionTransformer, Normalizer
-from sklearn.tree import DecisionTreeRegressor
-from sklearn import tree
-
+from sklearn.preprocessing import FunctionTransformer, Normalizer, StandardScaler
+from sklearn.neural_network import MLPRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+from joblib import dump
 
 # Import the data and filter the two datasets for the chosen two years.
 df = pd.read_stata('pwt100.dta')
-df_1990 = df[(df["year"]==1990)]
-df_1970 = df[(df["year"]==1970)]
 
+# 2. Select the input features that you deem useful for the purpose.
 features = [
     "country",
     "hc",
@@ -57,66 +55,51 @@ features_logarithmic = [
     "xr",
 ]
 
+# 1. Select the target variable rgdpna or rtfpna.
+trageted_feature = [
+    "rgdpna", # log required
+    #"rgdpna", # log not required
+]
+
 
 # Apply the logarithmic function on badly proportionated features 
 log_transformer = FunctionTransformer(np.log1p)
 
-df_1990_log_features = df_1990[features_logarithmic]
-df_1990_log = log_transformer.transform(df_1990_log_features)
+df_log_features = df[features_logarithmic+trageted_feature]
+df_log = log_transformer.transform(df_log_features)
 
 # Concat logarithmic features with unlogarithmic features
-df_1990_concat = pd.concat([df_1990[features], df_1990_log], axis=1, join="inner")
+df_concat = pd.concat([df[features], df_log], axis=1, join="inner")
 
 # Drop rows with na values
-df_1990_cleaned = df_1990_concat.dropna()
+df_cleaned = df_concat.dropna()
 
-# 1. Pay special attention to the need of normalization.
-df_1990_normalized = Normalizer().fit_transform(df_1990_cleaned[features[1:]+features_logarithmic])
+# normalization to merge logarithmic and non-logarithmic features
+df_normalized = pd.DataFrame(Normalizer().fit_transform(df_cleaned[features+features_logarithmic+trageted_feature]))
 
+# build train and target datasets
+X = pd.DataFrame(df_normalized,columns=df_normalized.columns[:-1])
+y = pd.DataFrame(df_normalized,columns=[df_normalized.columns[-1]])
 
-# 1 bis. Use PCA (Principal Component Analysis) to reduce the number of features. 
-# We choose the kmeans clustering technique and obtain the clusters for the dataset.
-# https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
-from sklearn.decomposition import PCA
-pca = PCA(2)
-df_1990_pca = pca.fit_transform(df_1990_cleaned[features[1:]+features_logarithmic])
-kmeans_1990 = KMeans(n_clusters=4, random_state=42).fit(df_1990_pca)
+# split dataset training and testing
+X_train, X_test, y_train, y_test = train_test_split(X, y,random_state=1, test_size=0.2)
 
-# Visualization of the clustering results.
-y_kmeans_1990 = kmeans_1990.predict(df_1990_pca)
-plt.scatter(df_1990_pca[:,0], df_1990_pca[:,1], c=y_kmeans_1990, s=50, cmap='viridis')
-plt.scatter(kmeans_1990.cluster_centers_[:,0], kmeans_1990.cluster_centers_[:,1], c='blue', s=200, alpha=0.9)
-plt.show()
+# 3. Prepare the input attributes for the NN. (scaler)
+# standartization of datasets
+sc_X = StandardScaler()
+X_trainscaled=sc_X.fit_transform(X_train)
+X_testscaled=sc_X.transform(X_test)
 
-# Listing the countries in the clusters
-def country_listing(df, clusters):
-    tmp = []
-    for i_k in range(0, max(clusters)+1):
-        tmp_k = []
-        for i_c, c in enumerate(clusters):
-            if c == i_k: tmp_k.append(df.iloc[i_c]["country"])
-        tmp.append(tmp_k)
-    return tmp
+# 4. Create the model and optimize the hyper-parameters.
+# building the Multi Layer Perceptron
+# hyper parameterizing it
+reg = MLPRegressor(hidden_layer_sizes=(18,3,18), activation="relu", alpha=0.01, random_state=1, max_iter=2000).fit(X_trainscaled, y_train)
 
-df_test = pd.DataFrame.from_records(country_listing(df_1990_cleaned, y_kmeans_1990))
-df_test.to_csv("out.csv", index=False)
+# 5. Evaluate the final model.
+# predict and evaluate
+y_pred = reg.predict(X_testscaled)
+print("The Score with ", (r2_score(y_pred, y_test)))
 
-# https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeRegressor.html
-clf_dtree = DecisionTreeRegressor(random_state=42)
-clf_dtree.fit(df_1990_cleaned[features[1:]+features_logarithmic], y_kmeans_1990)
-
-fig = plt.figure(figsize=(10,10))
-_ = tree.plot_tree(clf_dtree,
-                   feature_names = df_1990_cleaned[features[1:]+features_logarithmic].columns,
-                   class_names=y_kmeans_1990,
-                   filled=True)
-
-fig.savefig("decistion_tree.png")
-
-for e in country_listing(df_1990_cleaned, y_kmeans_1990):
-    print(len(e))
-
-#ccon, Real consumption of households and government, at current PPPs (in mil. 2017US$)
-#rgdpe, Expenditure-side real GDP at chained PPPs (in mil. 2017US$)
-#rconna, Real consumption at constant 2017 national prices (in mil. 2017US$)
-#xr, Exchange rate, national currency/USD (market+estimated)
+# 6. Save the final model.
+# dump the model
+dump(reg, 'model.joblib')
