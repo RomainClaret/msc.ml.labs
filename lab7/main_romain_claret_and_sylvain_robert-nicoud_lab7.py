@@ -57,7 +57,7 @@ features_logarithmic = [
 # 1. Select the target variable rgdpna or rtfpna.
 trageted_feature = [
     "rgdpna", # log required
-    #"rgdpna", # log not required
+    #"rtfpna", # log not required
 ]
 
 
