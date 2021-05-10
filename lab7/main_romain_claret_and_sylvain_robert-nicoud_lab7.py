@@ -46,16 +46,16 @@ features = [
     #"pl_k",
 ]
 features_logarithmic = [
-    "rgdpe",
+    #"rgdpe",
     "pop",
     "ccon",
-    "rgdpna",
+    #"rgdpna",
     "rconna",
     "xr",
 ]
 
 # 1. Select the target variable rgdpna or rtfpna.
-trageted_feature = [
+targeted_feature = [
     "rgdpna", # log required
     #"rtfpna", # log not required
 ]
@@ -64,7 +64,7 @@ trageted_feature = [
 # Apply the logarithmic function on badly proportionated features 
 log_transformer = FunctionTransformer(np.log1p)
 
-df_log_features = df[features_logarithmic+trageted_feature]
+df_log_features = df[features_logarithmic+targeted_feature]
 df_log = log_transformer.transform(df_log_features)
 
 # Concat logarithmic features with unlogarithmic features
@@ -74,7 +74,7 @@ df_concat = pd.concat([df[features], df_log], axis=1, join="inner")
 df_cleaned = df_concat.dropna()
 
 # normalization to merge logarithmic and non-logarithmic features
-df_normalized = pd.DataFrame(Normalizer().fit_transform(df_cleaned[features+features_logarithmic+trageted_feature]))
+df_normalized = pd.DataFrame(Normalizer().fit_transform(df_cleaned[features+features_logarithmic+targeted_feature]))
 
 # build train and target datasets
 X = pd.DataFrame(df_normalized,columns=df_normalized.columns[:-1])
@@ -101,8 +101,10 @@ model = MLPRegressor(hidden_layer_sizes=(18,3,18),activation="relu", alpha=0.01,
 # 5. Evaluate the final model.
 # predict and evaluate
 y_pred = model.predict(X_testscaled)
-print("The Score with ", (r2_score(y_pred, y_testscaled)))
+print("The Score with (1.0 is awesome)", (r2_score(y_pred, y_testscaled)))
 
-# 6. Save the final model.
+# 6. Save the final model. (optional)
 # dump the model
-dump(model, 'model.joblib')
+#dump(model, 'model.joblib')
+#dump(sc_X, 'sc_X.joblib')
+#dump(sc_y, 'sc_y.joblib')
