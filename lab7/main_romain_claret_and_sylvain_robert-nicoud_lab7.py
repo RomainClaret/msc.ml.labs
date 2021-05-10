@@ -32,7 +32,6 @@ df = pd.read_stata('pwt100.dta')
 
 # 2. Select the input features that you deem useful for the purpose.
 features = [
-    "country",
     "hc",
     "ctfp",
     "cwtfp",
@@ -90,16 +89,20 @@ sc_X = StandardScaler()
 X_trainscaled=sc_X.fit_transform(X_train)
 X_testscaled=sc_X.transform(X_test)
 
+sc_y = StandardScaler()
+y_trainscaled=sc_y.fit_transform(y_train)
+y_testscaled=sc_y.transform(y_test)
+
 # 4. Create the model and optimize the hyper-parameters.
 # building the Multi Layer Perceptron
 # hyper parameterizing it
-reg = MLPRegressor(hidden_layer_sizes=(18,3,18), activation="relu", alpha=0.01, random_state=1, max_iter=2000).fit(X_trainscaled, y_train)
+model = MLPRegressor(hidden_layer_sizes=(18,3,18),activation="relu", alpha=0.01, random_state=1, max_iter=2000).fit(X_trainscaled, y_trainscaled)
 
 # 5. Evaluate the final model.
 # predict and evaluate
-y_pred = reg.predict(X_testscaled)
-print("The Score with ", (r2_score(y_pred, y_test)))
+y_pred = model.predict(X_testscaled)
+print("The Score with ", (r2_score(y_pred, y_testscaled)))
 
 # 6. Save the final model.
 # dump the model
-dump(reg, 'model.joblib')
+dump(model, 'model.joblib')
