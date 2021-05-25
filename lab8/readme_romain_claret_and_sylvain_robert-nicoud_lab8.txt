@@ -10,3 +10,5 @@
 # - Romain Claret @RomainClaret
 # - Sylvain Robert-Nicoud @Nic0uds
 
+TODO
+- explain why we choose the ["hc","ccon"] features to do the time window

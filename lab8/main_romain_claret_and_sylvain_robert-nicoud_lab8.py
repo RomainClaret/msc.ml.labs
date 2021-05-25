@@ -13,8 +13,8 @@
 # - Romain Claret @RomainClaret
 # - Sylvain Robert-Nicoud @Nic0uds
 
-# 2. Interpret the results for one year using a decision tree. (with the original fields)
-# 3. Compare the results to the clusters from exercise 5.
+
+# The goal for this exercise is to predict the national based real GDP (rgdpna) OR national based TFP (rtfpna) of each country based on other attributes and the values from previous year(s).
 
 
 import pandas as pd
@@ -32,6 +32,8 @@ df = pd.read_stata('pwt100.dta')
 
 # 2. Select the input features that you deem useful for the purpose.
 features = [
+   "year",
+    "country",
     "hc",
     "ctfp",
     "cwtfp",
@@ -55,16 +57,21 @@ features_logarithmic = [
 ]
 
 # 1. Select the target variable rgdpna or rtfpna.
-targeted_feature = [
+targeted_features = [
     "rgdpna", # log required
     #"rtfpna", # log not required
 ]
 
+# Define the time window
+window_frame = 2
+
+# Define the features to apply the time window
+features_framed = ["hc","ccon"]
 
 # Apply the logarithmic function on badly proportionated features 
 log_transformer = FunctionTransformer(np.log1p)
 
-df_log_features = df[features_logarithmic+targeted_feature]
+df_log_features = df[features_logarithmic+targeted_features]
 df_log = log_transformer.transform(df_log_features)
 
 # Concat logarithmic features with unlogarithmic features
@@ -73,12 +80,39 @@ df_concat = pd.concat([df[features], df_log], axis=1, join="inner")
 # Drop rows with na values
 df_cleaned = df_concat.dropna()
 
-# normalization to merge logarithmic and non-logarithmic features
-df_normalized = pd.DataFrame(Normalizer().fit_transform(df_cleaned[features+features_logarithmic+targeted_feature]))
+# normalization of logarithmic features
+df_normalized = pd.DataFrame(Normalizer().fit_transform(df_cleaned[features[2:]+features_logarithmic+targeted_features]),columns=features[2:]+features_logarithmic+targeted_features)
+
+# merge logarithmic and non-logarithmic features
+df_normalized = pd.concat([df_cleaned[features[:2]].reset_index(drop=True),df_normalized], axis=1)
+
+
+# Building empty dataframe for time series
+tmp_df_windowed = pd.DataFrame(columns=features+features_logarithmic+targeted_features)
+
+# Adding the windowed features columns to empy dataframe
+for ff in features_framed:
+    for i in range(window_frame):
+        tmp_df_windowed[ff+"-"+str(i+1)] = []
+
+# Stack windowed features columns by countries
+for c in df_normalized["country"].unique():
+    tmp_df_country = df_normalized[df_normalized["country"]==c].sort_values("year")
+    for w in range(1,window_frame+1):
+        tmp_df_country_framed = tmp_df_country[features_framed][:-w]
+        tmp_df_country_framed.index = tmp_df_country_framed.index + w
+        for ff in features_framed:
+            tmp_df_country_framed = tmp_df_country_framed.rename(columns={ff: ff+"-"+str(w)})
+
+        tmp_df_country = tmp_df_country.join(tmp_df_country_framed)
+    tmp_df_windowed = pd.concat([tmp_df_windowed,tmp_df_country])
+
+# Clean the windowed dataframe and reset index
+df_normalized_windowed = tmp_df_windowed[tmp_df_windowed.columns.difference(["country","year"])].dropna().reset_index(drop=True)
 
 # build train and target datasets
-X = pd.DataFrame(df_normalized,columns=df_normalized.columns[:-1])
-y = pd.DataFrame(df_normalized,columns=[df_normalized.columns[-1]])
+X = df_normalized_windowed[df_normalized_windowed.columns.difference(targeted_features)]
+y = df_normalized_windowed[targeted_features]
 
 # split dataset training and testing
 X_train, X_test, y_train, y_test = train_test_split(X, y,random_state=1, test_size=0.2)
