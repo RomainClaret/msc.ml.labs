@@ -10,5 +10,5 @@
 # - Romain Claret @RomainClaret
 # - Sylvain Robert-Nicoud @Nic0uds
 
-TODO
-- explain why we choose the ["hc","ccon"] features to do the time window
+We computed time series on "hc" and "ccon" features because it seemed to be the best ones
+Using a time frame of 2 years helped to gain valuable information on observations (time evolution). This made our model more accurate.
