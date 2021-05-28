@@ -10,5 +10,10 @@
 # - Romain Claret @RomainClaret
 # - Sylvain Robert-Nicoud @Nic0uds
 
-We computed time series on "hc" and "ccon" features because it seemed to be the best ones
-Using a time frame of 2 years helped to gain valuable information on observations (time evolution). This made our model more accurate.
+
+# README
+- We computed time series on "hc" and "ccon" features because they seemed to carry information in time, explicitly trend information.
+- We used a two years window arbitrarily to observe a trend.
+- Using the exact hidden layer sizes, our time-series model is less accurate using the r2 score than our model in lab 07. The layers need to be tweaked to provide a better scoring, making sense as the features entering and the expected features extraction are probably different.
+- It's probable that our model cannot extract trending information from the window we gave as the dataset is probably too small to build this feature.
+- Further steps could be to add manually trending features to help the model find patterns.
